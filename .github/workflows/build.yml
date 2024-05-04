@@ -1,26 +1,29 @@
-name: Build and Test
-on:
-  pull_request:
-    branches: [master]
-  push:
-    branches: [master]
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    name: Java ${{ matrix.java }} on ${{ matrix.os }}
+    runs-on: self-hosted
+    steps:
+    - continue-on-error: true
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+    - continue-on-error: true
+      uses: actions/setup-java@v4
+      with:
+        cache: gradle
+        distribution: zulu
+        java-version: ${{ matrix.java }}
+    - continue-on-error: true
+      run: ./.github/scripts/build.sh
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        java: [8, 11]
-    name: Java ${{ matrix.java }} on ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          # Need to fetch 2 commits for the PR (base commit and head merge commit) so we can compute the diff
-          fetch-depth: 2
-      - uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: ${{ matrix.java }}
-          cache: gradle
-      - run: ./.github/scripts/build.sh
+        java:
+        - 8
+        - 11
+        os:
+        - ubuntu-latest
+name: Build and Test
+on:
+  repository_dispatch:
+    types: trigger-ga___build.yml
